@@ -202,8 +202,8 @@ export const mockMessages = [
     propertyId: '1',
     propertyTitle: 'Luxury Waterfront Villa',
     senderId: 'user1',
-    senderName: 'Alex Johnson',
-    senderAvatar: 'https://i.pravatar.cc/80?img=15',
+    senderName: 'Ahmed',
+    senderAvatar: 'https://i.pravatar.cc/80?img=57',
     receiverId: 'owner1',
     receiverName: 'Michael Rodriguez',
     messages: [
@@ -219,8 +219,8 @@ export const mockMessages = [
     propertyId: '3',
     propertyTitle: 'Beverly Hills Luxury Estate',
     senderId: 'user1',
-    senderName: 'Alex Johnson',
-    senderAvatar: 'https://i.pravatar.cc/80?img=15',
+    senderName: 'Ahmed',
+    senderAvatar: 'https://i.pravatar.cc/80?img=57',
     receiverId: 'owner1',
     receiverName: 'Michael Rodriguez',
     messages: [
@@ -233,8 +233,8 @@ export const mockMessages = [
 
 export const mockUsers = [
   {
-    id: 'user1', name: 'Alex Johnson', email: 'alex@example.com', phone: '+1 555-001-0001',
-    avatar: 'https://i.pravatar.cc/150?img=15', bio: 'Looking for my dream home in a vibrant city.',
+    id: 'user1', name: 'Ahmed', email: 'ahmed@example.com', phone: '+966 555-001-0001',
+    avatar: 'https://i.pravatar.cc/150?img=57', bio: 'Looking for my dream home in a vibrant city.',
     role: 'user', favoriteIds: ['2', '5', '7'], joinedAt: '2023-06-15T00:00:00Z',
   },
   {

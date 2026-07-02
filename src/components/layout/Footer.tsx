@@ -112,33 +112,7 @@ export default function Footer() {
   return (
     <footer dir={isRtl ? 'rtl' : 'ltr'}>
       {/* ── CTA Banner ───────────────────────────────────────────── */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' }}
-      >
-        {/* Decorative orb */}
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 blur-3xl" style={{ background: 'white' }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-1">
-                {lang === 'ar' ? 'هل تريد بيع أو تأجير عقارك؟' : 'Want to Sell or Rent Your Property?'}
-              </h2>
-              <p className="text-white/80 text-sm">
-                {lang === 'ar' ? 'انضم إلى آلاف الملاك الذين يثقون بدريم هومز لإدارة عقاراتهم.' : 'Join thousands of owners who trust DreamHomes to manage their listings.'}
-              </p>
-            </div>
-            <Link
-              to="/dashboard"
-              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:scale-105 hover:shadow-xl"
-              style={{ background: 'white', color: '#0ea5e9' }}
-            >
-              {lang === 'ar' ? 'أضف عقارك الآن' : 'List Your Property'}
-              <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
-            </Link>
-          </div>
-        </div>
-      </div>
+
 
       {/* ── Main Footer Body ─────────────────────────────────────── */}
       <div className="border-t border-custom" style={{ background: 'rgb(var(--color-card))' }}>

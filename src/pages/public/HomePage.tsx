@@ -107,12 +107,7 @@ const whyUsConfig = [
   },
 ];
 
-const TRUST_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80',
-];
+
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -173,25 +168,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center w-full">
-          {/* Trust badge */}
-          <div className="inline-flex items-center gap-3 mb-8 animate-slide-up">
-            <div className="flex -space-x-2 rtl:space-x-reverse">
-              {TRUST_AVATARS.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt=""
-                  className="w-7 h-7 rounded-full border-2 border-white/30 object-cover"
-                />
-              ))}
-            </div>
-            <span
-              className="text-xs font-semibold text-white/90 px-3.5 py-1.5 rounded-full border border-white/20"
-              style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
-            >
-              {lang === 'ar' ? '⭐ موضع ثقة 8,500+ عميل سعيد' : '⭐ Trusted by 8,500+ happy clients'}
-            </span>
-          </div>
+
 
           {/* Headline */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight animate-slide-up" style={{ animationDelay: '0.1s' }}>
