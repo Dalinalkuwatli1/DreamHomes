@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { addProperty, updateProperty } from '../../store/slices/propertySlice';
 import { addToast } from '../../store/slices/uiSlice';
 import { CITIES, PROPERTY_TYPES, FEATURES } from '../../data/mockData';
+import { useLanguage, cityTranslations, typeTranslations, featureTranslations } from '../../contexts/LanguageContext';
 import type { Property } from '../../types';
 
 const schema = z.object({
@@ -33,6 +34,7 @@ export default function PropertyFormPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(s => s.auth.user);
   const properties = useAppSelector(s => s.properties.properties);
+  const { t, isRtl, lang } = useLanguage();
   const isEdit = !!id;
   const existing = isEdit ? properties.find(p => p.id === id) : null;
 
@@ -71,7 +73,7 @@ export default function PropertyFormPage() {
         features: data.features || [],
       };
       dispatch(updateProperty(updated));
-      dispatch(addToast({ message: 'Property updated successfully!', type: 'success' }));
+      dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث العقار بنجاح!' : 'Property updated successfully!', type: 'success' }));
     } else {
       const newProp: Property = {
         id: Date.now().toString(),
@@ -90,7 +92,7 @@ export default function PropertyFormPage() {
         views: 0,
       };
       dispatch(addProperty(newProp));
-      dispatch(addToast({ message: 'Property listed successfully!', type: 'success' }));
+      dispatch(addToast({ message: lang === 'ar' ? 'تم إدراج العقار بنجاح!' : 'Property listed successfully!', type: 'success' }));
     }
     navigate('/dashboard');
   };
@@ -98,25 +100,25 @@ export default function PropertyFormPage() {
   const listingType = watch('listingType');
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => navigate('/dashboard')} className="w-10 h-10 rounded-xl flex items-center justify-center border border-custom text-muted hover:text-custom hover:border-sky-400 transition-all">
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} className={isRtl ? 'rotate-180' : ''} />
         </button>
         <div>
           <h1 className="section-title flex items-center gap-2">
             <Home size={24} className="text-sky-500" />
-            {isEdit ? 'Edit Property' : 'Add New Property'}
+            {isEdit ? (lang === 'ar' ? 'تعديل العقار' : 'Edit Property') : (lang === 'ar' ? 'إضافة عقار جديد' : 'Add New Property')}
           </h1>
-          <p className="section-subtitle">{isEdit ? 'Update your listing information' : 'Fill in the details to create your listing'}</p>
+          <p className="section-subtitle">{isEdit ? (lang === 'ar' ? 'قم بتحديث معلومات عقارك المدرج' : 'Update your listing information') : (lang === 'ar' ? 'املأ التفاصيل لإنشاء إعلان العقار الخاص بك' : 'Fill in the details to create your listing')}</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 text-sm">
         {/* Listing Type */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">Listing Type</h3>
+          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'نوع الإدراج' : 'Listing Type'}</h3>
           <div className="grid grid-cols-2 gap-3">
             {(['sale', 'rent'] as const).map(t => (
               <label
@@ -130,8 +132,8 @@ export default function PropertyFormPage() {
                   {listingType === t && <div className="w-2 h-2 rounded-full bg-sky-500" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-custom text-sm capitalize">For {t === 'sale' ? 'Sale' : 'Rent'}</p>
-                  <p className="text-xs text-muted">{t === 'sale' ? 'Sell your property' : 'Rent it out monthly'}</p>
+                  <p className="font-semibold text-custom text-sm capitalize">{t === 'sale' ? (lang === 'ar' ? 'للبيع' : 'For Sale') : (lang === 'ar' ? 'للإيجار' : 'For Rent')}</p>
+                  <p className="text-xs text-muted">{t === 'sale' ? (lang === 'ar' ? 'بيع العقار الخاص بك' : 'Sell your property') : (lang === 'ar' ? 'تأجير العقار شهرياً' : 'Rent it out monthly')}</p>
                 </div>
               </label>
             ))}
@@ -140,39 +142,39 @@ export default function PropertyFormPage() {
 
         {/* Basic Info */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">Basic Information</h3>
+          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}</h3>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="dh-label">Property Title *</label>
-              <input {...register('title')} className="dh-input" placeholder="e.g. Modern Downtown Penthouse" />
+              <label className="dh-label">{lang === 'ar' ? 'عنوان العقار *' : 'Property Title *'}</label>
+              <input {...register('title')} className="dh-input text-sm" placeholder={lang === 'ar' ? 'مثال: بنتهاوس حديث في وسط المدينة' : 'e.g. Modern Downtown Penthouse'} />
               {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
             </div>
             <div>
-              <label className="dh-label">Description *</label>
-              <textarea {...register('description')} rows={4} className="dh-input resize-none" placeholder="Describe your property in detail..." />
+              <label className="dh-label">{lang === 'ar' ? 'الوصف *' : 'Description *'}</label>
+              <textarea {...register('description')} rows={4} className="dh-input resize-none text-sm" placeholder={lang === 'ar' ? 'صف عقارك بالتفصيل...' : 'Describe your property in detail...'} />
               {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="dh-label">Property Type *</label>
-                <select {...register('type')} className="dh-input">
-                  <option value="">Select type...</option>
-                  {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <label className="dh-label">{lang === 'ar' ? 'نوع العقار *' : 'Property Type *'}</label>
+                <select {...register('type')} className="dh-input text-sm">
+                  <option value="">{lang === 'ar' ? 'اختر النوع...' : 'Select type...'}</option>
+                  {PROPERTY_TYPES.map(t => <option key={t} value={t}>{lang === 'ar' ? (typeTranslations[t] ?? t) : t}</option>)}
                 </select>
                 {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type.message}</p>}
               </div>
               <div>
-                <label className="dh-label">City *</label>
-                <select {...register('city')} className="dh-input">
-                  <option value="">Select city...</option>
-                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <label className="dh-label">{lang === 'ar' ? 'المدينة *' : 'City *'}</label>
+                <select {...register('city')} className="dh-input text-sm">
+                  <option value="">{lang === 'ar' ? 'اختر المدينة...' : 'Select city...'}</option>
+                  {CITIES.map(c => <option key={c} value={c}>{lang === 'ar' ? (cityTranslations[c] ?? c) : c}</option>)}
                 </select>
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city.message}</p>}
               </div>
             </div>
             <div>
-              <label className="dh-label">Full Address *</label>
-              <input {...register('address')} className="dh-input" placeholder="123 Main St, City, State ZIP" />
+              <label className="dh-label">{lang === 'ar' ? 'العنوان الكامل *' : 'Full Address *'}</label>
+              <input {...register('address')} className="dh-input text-sm" placeholder={lang === 'ar' ? 'شارع الاستقلال، إسطنبول' : '123 Main St, City, State ZIP'} />
               {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address.message}</p>}
             </div>
           </div>
@@ -180,27 +182,27 @@ export default function PropertyFormPage() {
 
         {/* Pricing & Size */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">Pricing & Size</h3>
+          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'السعر والمساحة' : 'Pricing & Size'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="dh-label">Price ({listingType === 'rent' ? '$/mo' : '$'}) *</label>
-              <input type="number" {...register('price', { valueAsNumber: true })} className="dh-input" placeholder="0" min={0} />
+              <label className="dh-label">{lang === 'ar' ? `السعر (${listingType === 'rent' ? '$/شهرياً' : '$'}) *` : `Price (${listingType === 'rent' ? '$/mo' : '$'}) *`}</label>
+              <input type="number" {...register('price', { valueAsNumber: true })} className="dh-input text-sm" placeholder="0" min={0} />
               {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price.message}</p>}
             </div>
             <div>
-              <label className="dh-label">Area (sq ft) *</label>
-              <input type="number" {...register('area', { valueAsNumber: true })} className="dh-input" placeholder="0" min={0} />
+              <label className="dh-label">{lang === 'ar' ? 'المساحة (قدم مربع) *' : 'Area (sq ft) *'}</label>
+              <input type="number" {...register('area', { valueAsNumber: true })} className="dh-input text-sm" placeholder="0" min={0} />
               {errors.area && <p className="text-xs text-red-500 mt-1">{errors.area.message}</p>}
             </div>
             <div>
-              <label className="dh-label">Bedrooms</label>
-              <select {...register('bedrooms', { valueAsNumber: true })} className="dh-input">
-                {[0, 1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n === 0 ? 'Studio' : n}</option>)}
+              <label className="dh-label">{lang === 'ar' ? 'غرف النوم' : 'Bedrooms'}</label>
+              <select {...register('bedrooms', { valueAsNumber: true })} className="dh-input text-sm">
+                {[0, 1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n === 0 ? (lang === 'ar' ? 'استوديو' : 'Studio') : n}</option>)}
               </select>
             </div>
             <div>
-              <label className="dh-label">Bathrooms *</label>
-              <select {...register('bathrooms', { valueAsNumber: true })} className="dh-input">
+              <label className="dh-label">{lang === 'ar' ? 'الحمامات *' : 'Bathrooms *'}</label>
+              <select {...register('bathrooms', { valueAsNumber: true })} className="dh-input text-sm">
                 {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
               {errors.bathrooms && <p className="text-xs text-red-500 mt-1">{errors.bathrooms.message}</p>}
@@ -210,7 +212,7 @@ export default function PropertyFormPage() {
 
         {/* Features */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">Features & Amenities</h3>
+          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'الميزات والمرافق' : 'Features & Amenities'}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {FEATURES.map(f => (
               <button
@@ -224,7 +226,7 @@ export default function PropertyFormPage() {
                 }`}
               >
                 <span className={`w-3 h-3 rounded-sm border ${selectedFeatures.includes(f) ? 'bg-sky-500 border-sky-500' : 'border-muted'}`} />
-                {f}
+                {lang === 'ar' ? (featureTranslations[f] ?? f) : f}
               </button>
             ))}
           </div>
@@ -232,12 +234,12 @@ export default function PropertyFormPage() {
 
         {/* Image */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">Property Image</h3>
+          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'صورة العقار' : 'Property Image'}</h3>
           <div>
-            <label className="dh-label">Image URL</label>
-            <input {...register('imageUrl')} className="dh-input" placeholder="https://example.com/image.jpg" />
+            <label className="dh-label">{lang === 'ar' ? 'رابط الصورة' : 'Image URL'}</label>
+            <input {...register('imageUrl')} className="dh-input text-sm" placeholder="https://example.com/image.jpg" />
             {errors.imageUrl && <p className="text-xs text-red-500 mt-1">{errors.imageUrl.message}</p>}
-            <p className="text-xs text-muted mt-1.5">Enter a URL for the main property image.</p>
+            <p className="text-xs text-muted mt-1.5">{lang === 'ar' ? 'أدخل رابطاً لصورة العقار الرئيسية.' : 'Enter a URL for the main property image.'}</p>
           </div>
           {watch('imageUrl') && (
             <div className="mt-4 h-48 rounded-xl overflow-hidden">
@@ -247,13 +249,13 @@ export default function PropertyFormPage() {
         </div>
 
         {/* Submit */}
-        <div className="flex gap-3 justify-end">
+        <div className={`flex gap-3 ${isRtl ? 'justify-start' : 'justify-end'}`}>
           <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary">
-            Cancel
+            {lang === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button type="submit" disabled={isSubmitting} className="btn-primary">
             <Save size={16} />
-            {isSubmitting ? 'Saving...' : isEdit ? 'Update Property' : 'Publish Listing'}
+            {isSubmitting ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : isEdit ? (lang === 'ar' ? 'تعديل العقار' : 'Update Property') : (lang === 'ar' ? 'نشر الإعلان' : 'Publish Listing')}
           </button>
         </div>
       </form>

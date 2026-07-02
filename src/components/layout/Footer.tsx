@@ -71,12 +71,12 @@ export default function Footer() {
     {
       title: lang === 'ar' ? 'العقارات' : 'Properties',
       links: [
-        { label: lang === 'ar' ? 'عقارات للبيع' : 'For Sale', to: '/properties?type=sale' },
-        { label: lang === 'ar' ? 'عقارات للإيجار' : 'For Rent', to: '/properties?type=rent' },
-        { label: lang === 'ar' ? 'شقق سكنية' : 'Apartments', to: '/properties?type=Apartment' },
-        { label: lang === 'ar' ? 'فلل وقصور' : 'Villas', to: '/properties?type=Villa' },
-        { label: lang === 'ar' ? 'عقارات مميزة' : 'Featured', to: '/properties?featured=true' },
-        { label: lang === 'ar' ? 'أحدث العقارات' : 'New Listings', to: '/properties?new=true' },
+        { label: lang === 'ar' ? 'عقارات للبيع' : 'For Sale', to: '/properties/sale' },
+        { label: lang === 'ar' ? 'عقارات للإيجار' : 'For Rent', to: '/properties/rent' },
+        { label: lang === 'ar' ? 'شقق سكنية' : 'Apartments', to: '/properties/apartments' },
+        { label: lang === 'ar' ? 'فلل وقصور' : 'Villas', to: '/properties/villas' },
+        { label: lang === 'ar' ? 'عقارات مميزة' : 'Featured', to: '/properties/featured' },
+        { label: lang === 'ar' ? 'أحدث العقارات' : 'New Listings', to: '/properties/latest' },
       ],
     },
     {
@@ -95,10 +95,10 @@ export default function Footer() {
       links: [
         { label: lang === 'ar' ? 'من نحن' : 'About Us', to: '/about' },
         { label: lang === 'ar' ? 'تواصل معنا' : 'Contact', to: '/contact' },
-        { label: lang === 'ar' ? 'الأسئلة الشائعة' : 'FAQ', to: '#' },
-        { label: lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy', to: '#' },
-        { label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms of Service', to: '#' },
-        { label: lang === 'ar' ? 'المدونة' : 'Blog', to: '#' },
+        { label: lang === 'ar' ? 'الأسئلة الشائعة' : 'FAQ', to: '/faq' },
+        { label: lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy', to: '/privacy' },
+        { label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms of Service', to: '/terms' },
+        { label: lang === 'ar' ? 'المدونة' : 'Blog', to: '/blog' },
       ],
     },
   ];

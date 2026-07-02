@@ -7,6 +7,7 @@ import { Building2, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/useAppStore';
 import { login } from '../../store/slices/authSlice';
 import { addToast } from '../../store/slices/uiSlice';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { User as UserType } from '../../types';
 
 const schema = z.object({
@@ -26,6 +27,7 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t, isRtl } = useLanguage();
   const [showPw, setShowPw] = useState(false);
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -53,25 +55,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12 animate-fade-in">
+    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)' }}>
             <Building2 size={28} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-custom">Create Account</h1>
-          <p className="text-muted mt-1">Join thousands of home seekers & sellers</p>
+          <h1 className="text-3xl font-bold text-custom font-serif">{t('nav.register')}</h1>
+          <p className="text-muted mt-1 text-sm">{t('auth.joinThousands')}</p>
         </div>
 
         <div className="dh-card p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {/* Role */}
             <div>
-              <label className="dh-label">I want to...</label>
+              <label className="dh-label">{t('auth.iWantTo')}</label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'user', label: 'Find a Home', emoji: '🔍' },
-                  { value: 'owner', label: 'List Property', emoji: '🏠' },
+                  { value: 'user', label: t('auth.findHome'), emoji: '🔍' },
+                  { value: 'owner', label: t('auth.listProperty'), emoji: '🏠' },
                 ].map(r => (
                   <label
                     key={r.value}
@@ -88,29 +90,29 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="dh-label flex items-center gap-1.5"><User size={12} /> Full Name</label>
-              <input {...register('name')} placeholder="John Doe" className="dh-input" />
+              <label className="dh-label flex items-center gap-1.5"><User size={12} /> {t('auth.fullName')}</label>
+              <input {...register('name')} placeholder={t('auth.fullNamePlaceholder')} className="dh-input text-sm" />
               {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="dh-label flex items-center gap-1.5"><Mail size={12} /> Email</label>
-                <input {...register('email')} type="email" placeholder="your@email.com" className="dh-input" />
+                <label className="dh-label flex items-center gap-1.5"><Mail size={12} /> {t('auth.email')}</label>
+                <input {...register('email')} type="email" placeholder="your@email.com" className="dh-input text-sm" />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
               </div>
               <div>
-                <label className="dh-label flex items-center gap-1.5"><Phone size={12} /> Phone</label>
-                <input {...register('phone')} placeholder="+1 555-000-0000" className="dh-input" />
+                <label className="dh-label flex items-center gap-1.5"><Phone size={12} /> {t('auth.phone')}</label>
+                <input {...register('phone')} placeholder="+1 555-000-0000" className="dh-input text-sm" />
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className="dh-label flex items-center gap-1.5"><Lock size={12} /> Password</label>
+              <label className="dh-label flex items-center gap-1.5"><Lock size={12} /> {t('auth.password')}</label>
               <div className="relative">
-                <input {...register('password')} type={showPw ? 'text' : 'password'} placeholder="Min. 6 characters" className="dh-input pr-12" />
-                <button type="button" onClick={() => setShowPw(s => !s)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-custom transition-colors">
+                <input {...register('password')} type={showPw ? 'text' : 'password'} placeholder={t('auth.passwordMin')} className={`dh-input text-sm ${isRtl ? 'pl-12 pr-4' : 'pr-12'}`} />
+                <button type="button" onClick={() => setShowPw(s => !s)} className={`absolute top-1/2 -translate-y-1/2 text-muted hover:text-custom transition-colors ${isRtl ? 'left-4' : 'right-4'}`}>
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -118,24 +120,24 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="dh-label flex items-center gap-1.5"><Lock size={12} /> Confirm Password</label>
-              <input {...register('confirmPassword')} type="password" placeholder="Repeat password" className="dh-input" />
+              <label className="dh-label flex items-center gap-1.5"><Lock size={12} /> {t('auth.confirmPassword')}</label>
+              <input {...register('confirmPassword')} type="password" placeholder={t('auth.repeatPassword')} className="dh-input text-sm" />
               {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
-            <label className="flex items-start gap-3 text-sm text-muted cursor-pointer mt-1">
+            <label className="flex items-start gap-3 text-xs sm:text-sm text-muted cursor-pointer mt-1">
               <input type="checkbox" required className="mt-0.5 accent-sky-500" />
-              <span>I agree to the <a href="#" className="text-sky-500 hover:underline">Terms of Service</a> and <a href="#" className="text-sky-500 hover:underline">Privacy Policy</a></span>
+              <span>{isRtl ? 'أوافق على الشروط والأحكام وسياسة الخصوصية' : 'I agree to the Terms of Service and Privacy Policy'}</span>
             </label>
 
             <button type="submit" disabled={isSubmitting} className="btn-primary justify-center w-full mt-2">
-              {isSubmitting ? 'Creating Account...' : 'Create Account'}
+              {isSubmitting ? t('auth.registering') : t('auth.createAccount')}
             </button>
           </form>
 
-          <p className="text-center text-sm text-muted mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-sky-500 hover:text-sky-600 font-medium">Sign in</Link>
+          <p className="text-center text-xs sm:text-sm text-muted mt-6">
+            {t('auth.haveAccount')}{' '}
+            <Link to="/login" className="text-sky-500 hover:text-sky-600 font-bold">{t('auth.login')}</Link>
           </p>
         </div>
       </div>

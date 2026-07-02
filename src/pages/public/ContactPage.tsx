@@ -40,8 +40,8 @@ export default function ContactPage() {
     { 
       icon: <MapPin size={20} className="text-sky-400" />, 
       title: t('contact.officeLabel'), 
-      value: lang === 'ar' ? '123 شارع العقارات' : '123 Realty Ave', 
-      sub: lang === 'ar' ? 'نيويورك، NY 10001' : 'New York, NY 10001' 
+      value: lang === 'ar' ? 'شارع بيبك، إسطنبول' : 'Bebek Cad., Istanbul', 
+      sub: lang === 'ar' ? 'إسطنبول، تركيا' : 'Istanbul, Turkey' 
     },
     { 
       icon: <Clock size={20} className="text-sky-400" />, 
@@ -53,11 +53,29 @@ export default function ContactPage() {
 
   return (
     <div className="animate-fade-in text-custom" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="py-16" style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.06) 0%, rgba(99,102,241,0.06) 100%)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-4xl font-bold text-custom mb-3">{t('contact.title')}</h1>
-          <p className="text-muted text-lg">{t('contact.subtitle')}</p>
+      {/* ── Cinematic Hero Image Header ── */}
+      <div className="relative h-72 sm:h-80 md:h-96 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=1600&q=85"
+          alt={lang === 'ar' ? 'تواصل معنا - إسطنبول' : 'Contact Us - Istanbul'}
+          className="w-full h-full object-cover"
+          style={{ objectPosition: 'center 60%' }}
+        />
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%)' }} />
+        {/* Decorative accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg, #0ea5e9, #6366f1)' }} />
+        {/* Text content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-sky-300 mb-3 px-3 py-1 rounded-full" style={{ background: 'rgba(14,165,233,0.2)', border: '1px solid rgba(14,165,233,0.3)' }}>
+            {lang === 'ar' ? 'إسطنبول، تركيا' : 'Istanbul, Turkey'}
+          </span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-lg tracking-tight">
+            {t('contact.title')}
+          </h1>
+          <p className="text-sky-100/90 text-base sm:text-lg max-w-xl font-medium drop-shadow">
+            {t('contact.subtitle')}
+          </p>
         </div>
       </div>
 
@@ -81,13 +99,19 @@ export default function ContactPage() {
               ))}
             </div>
 
-            <div className="dh-card overflow-hidden h-64" style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))' }}>
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center px-4">
-                  <MapPin size={40} className="text-sky-500 mx-auto mb-3" />
-                  <p className="font-semibold text-custom">{t('contact.hq')}</p>
-                  <p className="text-sm text-muted">{lang === 'ar' ? '123 شارع العقارات، نيويورك، NY 10001' : '123 Realty Ave, New York, NY 10001'}</p>
+            <div className="dh-card overflow-hidden h-64 relative">
+              <img
+                src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&q=80"
+                alt={lang === 'ar' ? 'إسطنبول، تركيا' : 'Istanbul, Turkey'}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%)' }} />
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <MapPin size={16} className="text-sky-400" />
+                  <p className="font-semibold text-white text-sm">{t('contact.hq')}</p>
                 </div>
+                <p className="text-xs text-white/80">{lang === 'ar' ? 'شارع بيبك، إسطنبول، تركيا' : 'Bebek Cad., Istanbul, Turkey'}</p>
               </div>
             </div>
           </div>

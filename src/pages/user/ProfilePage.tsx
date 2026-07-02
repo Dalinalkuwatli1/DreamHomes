@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { updateUser } from '../../store/slices/authSlice';
 import { addToast } from '../../store/slices/uiSlice';
 import { format } from 'date-fns';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -20,6 +21,7 @@ type ProfileFormData = z.infer<typeof schema>;
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(s => s.auth.user);
+  const { t, isRtl, lang } = useLanguage();
   const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -37,7 +39,7 @@ export default function ProfilePage() {
     setIsSaving(true);
     setTimeout(() => {
       dispatch(updateUser(data));
-      dispatch(addToast({ message: 'Profile updated successfully!', type: 'success' }));
+      dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث الملف الشخصي بنجاح!' : 'Profile updated successfully!', type: 'success' }));
       setIsSaving(false);
     }, 800);
   };
@@ -45,13 +47,13 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const stats = [
-    { label: 'Favorites', value: user.favoriteIds.length },
-    { label: 'Messages', value: 2 },
-    { label: 'Member Since', value: format(new Date(user.joinedAt), 'MMM yyyy') },
+    { label: t('dash.saved'), value: user.favoriteIds.length },
+    { label: t('dash.messages'), value: 2 },
+    { label: t('profile.memberSince'), value: lang === 'ar' ? format(new Date(user.joinedAt), 'yyyy/MM') : format(new Date(user.joinedAt), 'MMM yyyy') },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Header dh-card */}
       <div className="dh-card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -64,7 +66,7 @@ export default function ProfilePage() {
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-custom">{user.name}</h1>
             <p className="text-sm text-muted capitalize">
-              {user.role === 'owner' ? 'Property Owner / Advertiser' : 'Home Seeker'}
+              {user.role === 'owner' ? (lang === 'ar' ? 'مالك عقار / معلن' : 'Property Owner / Advertiser') : (lang === 'ar' ? 'باحث عن منزل' : 'Home Seeker')}
             </p>
             <div className="flex gap-6 mt-3">
               {stats.map(s => (
@@ -81,8 +83,8 @@ export default function ProfilePage() {
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: 'rgb(var(--color-card))' }}>
         {[
-          { key: 'profile', label: 'Profile Info', icon: <User size={15} /> },
-          { key: 'security', label: 'Security', icon: <Shield size={15} /> },
+          { key: 'profile', label: t('profile.info'), icon: <User size={15} /> },
+          { key: 'security', label: t('profile.security'), icon: <Shield size={15} /> },
         ].map(tab => (
           <button
             key={tab.key}
@@ -98,63 +100,63 @@ export default function ProfilePage() {
 
       {activeTab === 'profile' ? (
         <div className="dh-card p-6">
-          <h2 className="font-bold text-custom mb-6">Personal Information</h2>
+          <h2 className="font-bold text-custom mb-6">{t('profile.personalInfo')}</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="label flex items-center gap-1.5"><User size={12} /> Full Name</label>
-                <input {...register('name')} className="dh-input" placeholder="Your full name" />
+                <label className="dh-label flex items-center gap-1.5"><User size={12} /> {t('profile.fullName')}</label>
+                <input {...register('name')} className="dh-input text-sm" placeholder={t('auth.fullNamePlaceholder')} />
                 {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="label flex items-center gap-1.5"><Phone size={12} /> Phone</label>
-                <input {...register('phone')} className="dh-input" placeholder="+1 555-000-0000" />
+                <label className="dh-label flex items-center gap-1.5"><Phone size={12} /> {t('profile.phone')}</label>
+                <input {...register('phone')} className="dh-input text-sm" placeholder="+1 555-000-0000" />
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
               </div>
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><Mail size={12} /> Email</label>
-              <input {...register('email')} className="dh-input" placeholder="your@email.com" />
+              <label className="dh-label flex items-center gap-1.5"><Mail size={12} /> {t('profile.email')}</label>
+              <input {...register('email')} className="dh-input text-sm" placeholder="your@email.com" />
               {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><FileText size={12} /> Bio</label>
-              <textarea {...register('bio')} rows={3} className="dh-input resize-none" placeholder="Tell us a bit about yourself..." />
+              <label className="dh-label flex items-center gap-1.5"><FileText size={12} /> {t('profile.bio')}</label>
+              <textarea {...register('bio')} rows={3} className="dh-input resize-none text-sm" placeholder={t('profile.bioPlaceholder')} />
               {errors.bio && <p className="text-xs text-red-500 mt-1">{errors.bio.message}</p>}
             </div>
-            <div className="flex justify-end">
+            <div className={`flex ${isRtl ? 'justify-start' : 'justify-end'}`}>
               <button type="submit" disabled={!isDirty || isSaving} className="btn-primary disabled:opacity-50">
-                <Save size={16} /> {isSaving ? 'Saving...' : 'Save Changes'}
+                <Save size={16} /> {isSaving ? t('profile.saving') : t('profile.saveChanges')}
               </button>
             </div>
           </form>
         </div>
       ) : (
         <div className="dh-card p-6">
-          <h2 className="font-bold text-custom mb-6">Security Settings</h2>
+          <h2 className="font-bold text-custom mb-6">{lang === 'ar' ? 'إعدادات الأمان' : 'Security Settings'}</h2>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="label">Current Password</label>
-              <input type="password" className="dh-input" placeholder="••••••••" />
+              <label className="dh-label">{lang === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}</label>
+              <input type="password" className="dh-input text-sm" placeholder="••••••••" />
             </div>
             <div>
-              <label className="label">New Password</label>
-              <input type="password" className="dh-input" placeholder="••••••••" />
+              <label className="dh-label">{lang === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</label>
+              <input type="password" className="dh-input text-sm" placeholder="••••••••" />
             </div>
             <div>
-              <label className="label">Confirm New Password</label>
-              <input type="password" className="dh-input" placeholder="••••••••" />
+              <label className="dh-label">{lang === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'}</label>
+              <input type="password" className="dh-input text-sm" placeholder="••••••••" />
             </div>
-            <div className="flex justify-end pt-2">
-              <button className="btn-primary">Update Password</button>
+            <div className={`flex pt-2 ${isRtl ? 'justify-start' : 'justify-end'}`}>
+              <button className="btn-primary">{lang === 'ar' ? 'تحديث كلمة المرور' : 'Update Password'}</button>
             </div>
           </div>
 
           <div className="mt-8 pt-8 border-t border-custom">
-            <h3 className="font-semibold text-custom mb-2">Danger Zone</h3>
-            <p className="text-sm text-muted mb-4">Permanently delete your account and all data.</p>
+            <h3 className="font-semibold text-custom mb-2">{lang === 'ar' ? 'منطقة الخطر' : 'Danger Zone'}</h3>
+            <p className="text-sm text-muted mb-4">{lang === 'ar' ? 'حذف حسابك وجميع البيانات بشكل نهائي.' : 'Permanently delete your account and all data.'}</p>
             <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-              Delete Account
+              {lang === 'ar' ? 'حذف الحساب' : 'Delete Account'}
             </button>
           </div>
         </div>

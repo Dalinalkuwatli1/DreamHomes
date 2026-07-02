@@ -57,7 +57,7 @@ export default function Navbar() {
       }`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`flex items-center justify-between transition-all duration-500 ease-in-out ${
-            scrolled ? 'h-14 lg:h-16' : 'h-20 lg:h-24'
+            scrolled ? 'h-16' : 'h-20'
           }`}>
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group" onClick={() => dispatch(closeMobileMenu())}>
@@ -67,7 +67,11 @@ export default function Navbar() {
                 className={`w-auto object-contain transition-all duration-500 ease-in-out ${
                   scrolled ? 'h-10' : 'h-14'
                 }`}
-                style={{ filter: darkMode ? 'brightness(1.15)' : 'none' }}
+                style={{
+                  filter: darkMode
+                    ? 'brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,0.3))'
+                    : 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))'
+                }}
               />
             </Link>
 
@@ -140,11 +144,9 @@ export default function Navbar() {
                   <div className="relative hidden md:block">
                     <button
                       onClick={() => setUserMenuOpen(o => !o)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-dh-card transition-all border border-custom"
+                      className="relative block rounded-full focus:outline-none"
                     >
-                      <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
-                      <span className="text-sm font-medium text-custom max-w-24 truncate">{user.name.split(' ')[0]}</span>
-                      <ChevronDown size={14} className={`text-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                      <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-custom hover:scale-105 transition-transform" />
                     </button>
 
                     {userMenuOpen && (

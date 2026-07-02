@@ -151,14 +151,16 @@
   position: relative;
   text-decoration: none;
   color: rgb(var(--color-muted));
-  padding-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  padding-bottom: 6px;
 }
 .nav-link:hover { color: #0ea5e9; }
 .nav-link.active { color: #0ea5e9; }
 .nav-link::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 0;
   left: 0;
   width: 0;
   height: 2px;

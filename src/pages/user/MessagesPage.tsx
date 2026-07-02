@@ -4,12 +4,14 @@ import { format } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { setActiveConversation, sendMessage, deleteConversation } from '../../store/slices/messagesSlice';
 import { addToast } from '../../store/slices/uiSlice';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { Message } from '../../types';
 
 export default function MessagesPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(s => s.auth.user);
   const { conversations, activeConversationId } = useAppSelector(s => s.messages);
+  const { t, isRtl, lang } = useLanguage();
   const [newMessage, setNewMessage] = useState('');
 
   const activeConv = conversations.find(c => c.id === activeConversationId);
@@ -29,25 +31,25 @@ export default function MessagesPage() {
 
   const handleDelete = (convId: string) => {
     dispatch(deleteConversation(convId));
-    dispatch(addToast({ message: 'Conversation deleted', type: 'info' }));
+    dispatch(addToast({ message: lang === 'ar' ? 'تم حذف المحادثة' : 'Conversation deleted', type: 'info' }));
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Sidebar */}
       <div className={`w-full md:w-80 lg:w-96 shrink-0 border-r border-custom flex flex-col bg-dh-card ${activeConversationId ? 'hidden md:flex' : 'flex'}`}>
         <div className="px-5 py-4 border-b border-custom">
           <h2 className="font-bold text-custom flex items-center gap-2">
-            <MessageSquare size={18} className="text-sky-500" /> Messages
+            <MessageSquare size={18} className="text-sky-500" /> {t('msg.title')}
           </h2>
-          <p className="text-xs text-muted mt-0.5">{conversations.length} conversations</p>
+          <p className="text-xs text-muted mt-0.5">{conversations.length} {t('msg.conversations')}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
               <MessageSquare size={40} className="text-muted mb-3" />
-              <p className="text-sm text-muted">No conversations yet</p>
+              <p className="text-sm text-muted">{lang === 'ar' ? 'لا توجد محادثات بعد' : 'No conversations yet'}</p>
             </div>
           ) : (
             conversations.map(conv => {
@@ -101,8 +103,8 @@ export default function MessagesPage() {
         {!activeConv ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <MessageSquare size={56} className="text-muted/30 mb-4" />
-            <h3 className="text-lg font-semibold text-custom mb-2">Select a Conversation</h3>
-            <p className="text-sm text-muted">Choose a conversation from the sidebar to start chatting.</p>
+            <h3 className="text-lg font-semibold text-custom mb-2">{lang === 'ar' ? 'حدد محادثة' : 'Select a Conversation'}</h3>
+            <p className="text-sm text-muted">{lang === 'ar' ? 'اختر محادثة من القائمة الجانبية لبدء الدردشة.' : 'Choose a conversation from the sidebar to start chatting.'}</p>
           </div>
         ) : (
           <>
@@ -122,7 +124,7 @@ export default function MessagesPage() {
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3" style={{ background: 'rgb(var(--color-bg))' }}>
               {activeConv.messages.length === 0 && (
                 <div className="text-center text-sm text-muted py-10">
-                  No messages yet. Start the conversation!
+                  {lang === 'ar' ? 'لا توجد رسائل بعد. ابدأ المحادثة!' : 'No messages yet. Start the conversation!'}
                 </div>
               )}
               {activeConv.messages.map(msg => {
@@ -149,14 +151,14 @@ export default function MessagesPage() {
               <div className="flex gap-3">
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder={t('msg.writeMessage')}
                   value={newMessage}
                   onChange={e => setNewMessage(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                  className="dh-input flex-1"
+                  className="dh-input flex-1 text-sm"
                 />
                 <button onClick={handleSend} disabled={!newMessage.trim()} className="btn-primary px-4 disabled:opacity-40 disabled:cursor-not-allowed">
-                  <Send size={16} />
+                  <Send size={16} className={isRtl ? 'rotate-180' : ''} />
                 </button>
               </div>
             </div>
