@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { toggleDarkMode, closeMobileMenu, toggleMobileMenu } from '../../store/slices/uiSlice';
-import { logout } from '../../store/slices/authSlice';
+import { logout, updateUser } from '../../store/slices/authSlice';
 import { useLanguage } from '../../contexts/LanguageContext';
 import api from '../../services/api';
 
@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await api.post('/users/logout');
+      await api.post('/auth/logout');
     } catch (e) {
       console.error('Failed to call logout endpoint', e);
     }
@@ -54,9 +54,14 @@ export default function Navbar() {
     try {
       const response = await api.patch('/users/me', { role: role.toUpperCase() });
       const updatedUser = response.data.data;
-      // Since it's stored in Redux/localStorage, update the local representation
-      dispatch(logout()); // Log out and log back in, or just update the user state directly
-      window.location.reload();
+      dispatch(updateUser(updatedUser));
+      setUserMenuOpen(false);
+      dispatch(closeMobileMenu());
+      if (role === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Failed to switch role', err);
     }
@@ -129,7 +134,7 @@ export default function Navbar() {
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              {user && (
+              {user ? (
                 <>
                   {/* Favorites */}
                   <Link
@@ -165,7 +170,7 @@ export default function Navbar() {
                       onClick={() => setUserMenuOpen(o => !o)}
                       className="relative block rounded-full focus:outline-none"
                     >
-                      <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-custom hover:scale-105 transition-transform" />
+                      <img src={user.avatar || 'https://i.pravatar.cc/150?img=12'} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-custom hover:scale-105 transition-transform" />
                     </button>
 
                     {userMenuOpen && (
@@ -177,7 +182,7 @@ export default function Navbar() {
                         {/* Header: name + role badge */}
                         <div className="px-4 py-3 border-b border-custom">
                           <div className="flex items-center gap-3 mb-2">
-                            <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-500/30" />
+                            <img src={user.avatar || 'https://i.pravatar.cc/150?img=12'} alt={user.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-500/30" />
                             <div>
                               <p className="text-sm font-bold text-custom leading-tight">{user.name}</p>
                               <p className="text-xs text-muted">{user.email}</p>
@@ -296,6 +301,15 @@ export default function Navbar() {
                     )}
                   </div>
                 </>
+              ) : (
+                <div className="hidden md:flex items-center gap-3">
+                  <Link to="/login" className="text-sm font-semibold text-muted hover:text-custom transition-colors">
+                    {lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+                  </Link>
+                  <Link to="/register" className="btn-primary py-2 px-4 text-xs font-bold">
+                    {lang === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
+                  </Link>
+                </div>
               )}
 
               {/* Mobile menu button */}
@@ -329,11 +343,11 @@ export default function Navbar() {
                 </NavLink>
               ))}
               <div className="border-t border-custom my-2" />
-              {user && (
+              {user ? (
                 <>
                   {/* Mobile role badge */}
                   <div className="flex items-center gap-3 px-4 py-2">
-                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar || 'https://i.pravatar.cc/150?img=12'} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
                     <div>
                       <p className="text-sm font-semibold text-custom">{user.name}</p>
                       <span
@@ -364,6 +378,23 @@ export default function Navbar() {
                     <LogOut size={16} /> {t('nav.signout')}
                   </button>
                 </>
+              ) : (
+                <div className="flex flex-col gap-2 mt-2 px-4">
+                  <Link
+                    to="/login"
+                    onClick={() => dispatch(closeMobileMenu())}
+                    className="w-full flex items-center justify-center py-2.5 rounded-xl border border-custom text-sm font-semibold text-custom hover:bg-bg transition-colors"
+                  >
+                    {lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => dispatch(closeMobileMenu())}
+                    className="w-full flex items-center justify-center py-2.5 rounded-xl bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 transition-colors"
+                  >
+                    {lang === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
+                  </Link>
+                </div>
               )}
             </div>
           </div>

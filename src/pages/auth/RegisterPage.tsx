@@ -38,7 +38,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await api.post('/users/register', {
+      const response = await api.post('/auth/register', {
         name: data.name,
         email: data.email,
         phone: data.phone,

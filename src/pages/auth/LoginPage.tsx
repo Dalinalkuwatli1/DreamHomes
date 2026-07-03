@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await api.post('/users/login', data);
+      const response = await api.post('/auth/login', data);
       const { user, accessToken } = response.data.data;
       
       dispatch(login({ user, accessToken }));
