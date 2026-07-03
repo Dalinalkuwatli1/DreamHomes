@@ -8,14 +8,14 @@ import { useAppDispatch } from '../../hooks/useAppStore';
 import { login } from '../../store/slices/authSlice';
 import { addToast } from '../../store/slices/uiSlice';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { User as UserType } from '../../types';
+import api from '../../services/api';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(7, 'Enter a valid phone number'),
   role: z.enum(['user', 'owner']),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine(d => d.password === d.confirmPassword, {
   message: "Passwords don't match",
@@ -27,7 +27,7 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, lang } = useLanguage();
   const [showPw, setShowPw] = useState(false);
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -37,21 +37,26 @@ export default function RegisterPage() {
   const selectedRole = watch('role');
 
   const onSubmit = async (data: FormData) => {
-    await new Promise(r => setTimeout(r, 900));
-    const newUser: UserType = {
-      id: `user-${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      avatar: `https://i.pravatar.cc/150?u=${data.email}`,
-      bio: '',
-      role: data.role,
-      favoriteIds: [],
-      joinedAt: new Date().toISOString(),
-    };
-    dispatch(login(newUser));
-    dispatch(addToast({ message: `Welcome to DreamHomes, ${data.name.split(' ')[0]}!`, type: 'success' }));
-    navigate(data.role === 'owner' ? '/dashboard' : '/');
+    try {
+      const response = await api.post('/users/register', {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role.toUpperCase(), // Match backend roles: USER / OWNER / ADMIN
+        password: data.password,
+      });
+
+      const { user, accessToken } = response.data.data;
+      dispatch(login({ user, accessToken }));
+      dispatch(addToast({ 
+        message: lang === 'ar' ? `مرحباً بك في DreamHomes، ${user.name}! 🎉` : `Welcome to DreamHomes, ${user.name.split(' ')[0]}!`, 
+        type: 'success' 
+      }));
+      navigate(user.role === 'OWNER' ? '/dashboard' : '/');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || (lang === 'ar' ? 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.' : 'Registration failed. Please try again.');
+      dispatch(addToast({ message: errorMsg, type: 'error' }));
+    }
   };
 
   return (

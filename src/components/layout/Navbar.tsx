@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { toggleDarkMode, closeMobileMenu, toggleMobileMenu } from '../../store/slices/uiSlice';
-import { switchRole } from '../../store/slices/authSlice';
+import { logout } from '../../store/slices/authSlice';
 import { useLanguage } from '../../contexts/LanguageContext';
+import api from '../../services/api';
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
@@ -20,7 +21,7 @@ export default function Navbar() {
   const unreadCount = useAppSelector(s =>
     s.messages.conversations.reduce((acc, c) => acc + c.unreadCount, 0)
   );
-  const favCount = user?.favoriteIds.length ?? 0;
+  const favCount = user?.favoriteIds?.length ?? 0;
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -37,10 +38,28 @@ export default function Navbar() {
     { to: '/contact', label: t('nav.contact') },
   ];
 
-  const handleRoleSwitch = (role: 'user' | 'owner') => {
-    dispatch(switchRole(role));
+  const handleLogout = async () => {
+    try {
+      await api.post('/users/logout');
+    } catch (e) {
+      console.error('Failed to call logout endpoint', e);
+    }
+    dispatch(logout());
     setUserMenuOpen(false);
-    if (role === 'owner') navigate('/dashboard');
+    dispatch(closeMobileMenu());
+    navigate('/');
+  };
+
+  const handleRoleSwitch = async (role: 'user' | 'owner') => {
+    try {
+      const response = await api.patch('/users/me', { role: role.toUpperCase() });
+      const updatedUser = response.data.data;
+      // Since it's stored in Redux/localStorage, update the local representation
+      dispatch(logout()); // Log out and log back in, or just update the user state directly
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to switch role', err);
+    }
   };
 
   // Role badge color
@@ -268,7 +287,7 @@ export default function Navbar() {
 
                         {/* Sign out */}
                         <div className="border-t border-custom pt-1 mt-1">
-                          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                             <LogOut size={15} />
                             {t('nav.signout')}
                           </button>
@@ -341,7 +360,7 @@ export default function Navbar() {
                       <LayoutDashboard size={16} /> {t('nav.dashboard')}
                     </NavLink>
                   )}
-                  <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                     <LogOut size={16} /> {t('nav.signout')}
                   </button>
                 </>

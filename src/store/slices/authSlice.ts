@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../types';
-import { mockUsers } from '../../data/mockData';
 
 interface AuthState {
   user: User | null;
@@ -9,9 +8,13 @@ interface AuthState {
   loading: boolean;
 }
 
+// Get initial values from localStorage if available
+const storedUser = localStorage.getItem('authUser');
+const storedToken = localStorage.getItem('accessToken');
+
 const initialState: AuthState = {
-  user: mockUsers[0] as User,
-  isAuthenticated: true,
+  user: storedUser ? JSON.parse(storedUser) : null,
+  isAuthenticated: !!storedUser && !!storedToken,
   loading: false,
 };
 
@@ -19,30 +22,22 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login(state, action: PayloadAction<User>) {
-      state.user = action.payload;
+    login(state, action: PayloadAction<{ user: User; accessToken: string }>) {
+      state.user = action.payload.user;
       state.isAuthenticated = true;
+      localStorage.setItem('authUser', JSON.stringify(action.payload.user));
+      localStorage.setItem('accessToken', action.payload.accessToken);
     },
     logout(state) {
       state.user = null;
       state.isAuthenticated = false;
-    },
-    switchRole(state, action: PayloadAction<'user' | 'owner'>) {
-      if (state.user) {
-        const nextUser = mockUsers.find(u => u.role === action.payload);
-        if (nextUser) state.user = nextUser as User;
-      }
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('accessToken');
     },
     updateUser(state, action: PayloadAction<Partial<User>>) {
-      if (state.user) state.user = { ...state.user, ...action.payload };
-    },
-    toggleFavorite(state, action: PayloadAction<string>) {
-      if (!state.user) return;
-      const idx = state.user.favoriteIds.indexOf(action.payload);
-      if (idx === -1) {
-        state.user.favoriteIds.push(action.payload);
-      } else {
-        state.user.favoriteIds.splice(idx, 1);
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('authUser', JSON.stringify(state.user));
       }
     },
     setLoading(state, action: PayloadAction<boolean>) {
@@ -51,5 +46,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { login, logout, switchRole, updateUser, toggleFavorite, setLoading } = authSlice.actions;
+export const { login, logout, updateUser, setLoading } = authSlice.actions;
 export default authSlice.reducer;

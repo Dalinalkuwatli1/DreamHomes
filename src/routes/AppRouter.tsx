@@ -26,6 +26,7 @@ import BlogPage from '../pages/public/BlogPage';
 // Auth Pages
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 // User Pages
 import FavoritesPage from '../pages/user/FavoritesPage';
@@ -75,17 +76,20 @@ export default function AppRouter() {
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
 
-          {/* User */}
-          <Route path="favorites" element={<FavoritesPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            {/* User */}
+            <Route path="favorites" element={<FavoritesPage />} />
+            <Route path="messages" element={<MessagesPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
 
-          {/* Dashboard */}
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="dashboard/add-property" element={<PropertyFormPage />} />
-          <Route path="dashboard/edit-property/:id" element={<PropertyFormPage />} />
-          <Route path="dashboard/analytics" element={<AnalyticsPage />} />
+            {/* Dashboard */}
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="dashboard/add-property" element={<PropertyFormPage />} />
+            <Route path="dashboard/edit-property/:id" element={<PropertyFormPage />} />
+            <Route path="dashboard/analytics" element={<AnalyticsPage />} />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,31 +7,39 @@ import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/useAppStore';
 import { login } from '../../store/slices/authSlice';
 import { addToast } from '../../store/slices/uiSlice';
-import { mockUsers } from '../../data/mockData';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { User } from '../../types';
+import api from '../../services/api';
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, lang } = useLanguage();
   const [showPw, setShowPw] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
-    await new Promise(r => setTimeout(r, 800));
-    const user = mockUsers.find(u => u.email === data.email) || mockUsers[0];
-    dispatch(login(user as User));
-    dispatch(addToast({ message: `Welcome back, ${user.name.split(' ')[0]}!`, type: 'success' }));
-    navigate('/');
+    try {
+      const response = await api.post('/users/login', data);
+      const { user, accessToken } = response.data.data;
+      
+      dispatch(login({ user, accessToken }));
+      dispatch(addToast({ 
+        message: lang === 'ar' ? `مرحباً بعودتك، ${user.name}! 👋` : `Welcome back, ${user.name.split(' ')[0]}!`, 
+        type: 'success' 
+      }));
+      navigate('/');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || (lang === 'ar' ? 'فشل تسجيل الدخول. يرجى التحقق من البيانات.' : 'Login failed. Please check your credentials.');
+      dispatch(addToast({ message: errorMsg, type: 'error' }));
+    }
   };
 
   return (

@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Home } from 'lucide-react';
+import { Save, ArrowLeft, Home, Upload, X, ImagePlus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { addProperty, updateProperty } from '../../store/slices/propertySlice';
 import { addToast } from '../../store/slices/uiSlice';
@@ -37,6 +37,13 @@ export default function PropertyFormPage() {
   const { t, isRtl, lang } = useLanguage();
   const isEdit = !!id;
   const existing = isEdit ? properties.find(p => p.id === id) : null;
+  const [imagePreview, setImagePreview] = useState<string>(
+    existing?.images && existing.images.length > 0 
+      ? (typeof existing.images[0] === 'string' ? existing.images[0] : (existing.images[0] as any).url) 
+      : ''
+  );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<PropertyFormData>({
     resolver: zodResolver(schema) as any,
@@ -52,11 +59,31 @@ export default function PropertyFormPage() {
       city: existing?.city || '',
       address: existing?.address || '',
       features: existing?.features || [],
-      imageUrl: existing?.images[0] || '',
+      imageUrl: '',
     },
   });
 
   const selectedFeatures = watch('features') || [];
+
+  const handleImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImagePreview(result);
+      setValue('imageUrl', result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
 
   const toggleFeature = (f: string) => {
     const current = watch('features') || [];
@@ -64,37 +91,45 @@ export default function PropertyFormPage() {
   };
 
   const onSubmit = async (data: PropertyFormData) => {
-    await new Promise(r => setTimeout(r, 800));
-    if (isEdit && existing) {
-      const updated: Property = {
-        ...existing,
-        ...data,
-        images: data.imageUrl ? [data.imageUrl, ...existing.images.slice(1)] : existing.images,
-        features: data.features || [],
-      };
-      dispatch(updateProperty(updated));
-      dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث العقار بنجاح!' : 'Property updated successfully!', type: 'success' }));
-    } else {
-      const newProp: Property = {
-        id: Date.now().toString(),
-        ...data,
-        images: data.imageUrl ? [data.imageUrl] : ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80'],
-        features: data.features || [],
-        ownerId: user?.id || 'owner1',
-        ownerName: user?.name || 'Agent',
-        ownerAvatar: user?.avatar || 'https://i.pravatar.cc/80?img=12',
-        ownerPhone: user?.phone || '',
-        ownerEmail: user?.email || '',
-        status: 'active',
-        isNew: true,
-        isFeatured: false,
-        createdAt: new Date().toISOString(),
-        views: 0,
-      };
-      dispatch(addProperty(newProp));
-      dispatch(addToast({ message: lang === 'ar' ? 'تم إدراج العقار بنجاح!' : 'Property listed successfully!', type: 'success' }));
+    try {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('description', data.description);
+      formData.append('type', data.type.toUpperCase()); // SALE / RENT
+      formData.append('price', String(data.price));
+      formData.append('area', String(data.area));
+      formData.append('bedrooms', String(data.bedrooms));
+      formData.append('bathrooms', String(data.bathrooms));
+      formData.append('city', data.city);
+      formData.append('address', data.address);
+      
+      if (data.features && data.features.length > 0) {
+        data.features.forEach(f => formData.append('features[]', f));
+      }
+
+      if (imageFile) {
+        // Appends under key "images" as defined in uploadPropertyImages upload middleware
+        formData.append('images', imageFile);
+      }
+
+      if (isEdit && existing) {
+        const res = await api.put(`/properties/${existing.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        dispatch(updateProperty(res.data.data));
+        dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث العقار بنجاح!' : 'Property updated successfully!', type: 'success' }));
+      } else {
+        const res = await api.post('/properties', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        dispatch(addProperty(res.data.data));
+        dispatch(addToast({ message: lang === 'ar' ? 'تم إدراج العقار بنجاح!' : 'Property listed successfully!', type: 'success' }));
+      }
+      navigate('/dashboard');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to save property listing';
+      dispatch(addToast({ message: msg, type: 'error' }));
     }
-    navigate('/dashboard');
   };
 
   const listingType = watch('listingType');
@@ -232,18 +267,68 @@ export default function PropertyFormPage() {
           </div>
         </div>
 
-        {/* Image */}
+        {/* Image Upload */}
         <div className="dh-card p-6">
           <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'صورة العقار' : 'Property Image'}</h3>
-          <div>
-            <label className="dh-label">{lang === 'ar' ? 'رابط الصورة' : 'Image URL'}</label>
-            <input {...register('imageUrl')} className="dh-input text-sm" placeholder="https://example.com/image.jpg" />
-            {errors.imageUrl && <p className="text-xs text-red-500 mt-1">{errors.imageUrl.message}</p>}
-            <p className="text-xs text-muted mt-1.5">{lang === 'ar' ? 'أدخل رابطاً لصورة العقار الرئيسية.' : 'Enter a URL for the main property image.'}</p>
-          </div>
-          {watch('imageUrl') && (
-            <div className="mt-4 h-48 rounded-xl overflow-hidden">
-              <img src={watch('imageUrl')} alt="Preview" className="w-full h-full object-cover" />
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageFile(file);
+              e.target.value = '';
+            }}
+          />
+
+          {imagePreview ? (
+            /* Preview with overlay controls */
+            <div className="relative h-56 rounded-2xl overflow-hidden group">
+              <img src={imagePreview} alt="Property preview" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/90 text-gray-800 rounded-xl text-sm font-semibold hover:bg-white transition"
+                >
+                  <Upload size={15} />
+                  {lang === 'ar' ? 'تغيير الصورة' : 'Change Image'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(''); setValue('imageUrl', ''); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500/90 text-white rounded-xl text-sm font-semibold hover:bg-red-500 transition"
+                >
+                  <X size={15} />
+                  {lang === 'ar' ? 'إزالة' : 'Remove'}
+                </button>
+              </div>
+              <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-lg">
+                {lang === 'ar' ? '✓ صورة محفوظة' : '✓ Image saved'}
+              </div>
+            </div>
+          ) : (
+            /* Drop zone */
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-3 h-48 rounded-2xl border-2 border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/50 dark:bg-sky-900/10 hover:bg-sky-100/60 dark:hover:bg-sky-900/20 cursor-pointer transition-colors"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+                <ImagePlus size={28} className="text-sky-500" />
+              </div>
+              <div className="text-center px-4">
+                <p className="font-semibold text-custom text-sm">
+                  {lang === 'ar' ? 'اضغط لاختيار صورة أو اسحبها هنا' : 'Click to upload or drag & drop'}
+                </p>
+                <p className="text-xs text-muted mt-1">
+                  {lang === 'ar' ? 'PNG، JPG، WEBP — حتى 10 ميغابايت' : 'PNG, JPG, WEBP — up to 10 MB'}
+                </p>
+              </div>
             </div>
           )}
         </div>
