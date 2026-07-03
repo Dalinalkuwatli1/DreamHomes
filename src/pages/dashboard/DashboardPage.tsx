@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, Home, DollarSign, Heart, MessageSquare, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
 import { openDeleteModal } from '../../store/slices/uiSlice';
-import { deleteProperty } from '../../store/slices/propertySlice';
+import { deleteProperty, setProperties } from '../../store/slices/propertySlice';
 import { addToast } from '../../store/slices/uiSlice';
 import ConfirmDeleteModal from '../../components/ui/ConfirmDeleteModal';
 import { useLanguage } from '../../contexts/LanguageContext';
+import api from '../../services/api';
+import { mapBackendPropertyToFrontend } from '../../utils/propertyMapper';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -16,8 +18,23 @@ export default function DashboardPage() {
   const conversations = useAppSelector(s => s.messages.conversations);
   const { t, isRtl, lang, tProp } = useLanguage();
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchMyProperties = async () => {
+      try {
+        const res = await api.get(`/properties?ownerId=${user.id}`);
+        const rawList = res.data.data?.properties || res.data.data || [];
+        const mapped = rawList.map(mapBackendPropertyToFrontend);
+        dispatch(setProperties(mapped));
+      } catch (err) {
+        console.error('Failed to fetch properties', err);
+      }
+    };
+    fetchMyProperties();
+  }, [user?.id, dispatch]);
+
   const myProperties = useMemo(
-    () => properties.filter(p => p.ownerId === user?.id),
+    () => properties.filter(p => p.ownerId === String(user?.id)),
     [properties, user]
   );
 
@@ -30,9 +47,15 @@ export default function DashboardPage() {
     { label: t('dash.messages'), value: conversations.length, icon: <MessageSquare size={22} className="text-indigo-400" />, color: 'indigo' },
   ];
 
-  const handleDeleteConfirm = (id: string) => {
-    dispatch(deleteProperty(id));
-    dispatch(addToast({ message: lang === 'ar' ? 'تم حذف العقار بنجاح' : 'Property deleted successfully', type: 'success' }));
+  const handleDeleteConfirm = async (id: string) => {
+    try {
+      await api.delete(`/properties/${id}`);
+      dispatch(deleteProperty(id));
+      dispatch(addToast({ message: lang === 'ar' ? 'تم حذف العقار بنجاح' : 'Property deleted successfully', type: 'success' }));
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to delete property';
+      dispatch(addToast({ message: msg, type: 'error' }));
+    }
   };
 
   const formatPrice = (price: number, type: string) => {

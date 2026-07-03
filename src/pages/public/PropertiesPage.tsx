@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, List, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppStore';
-import { setFilters, resetFilters, setPage } from '../../store/slices/propertySlice';
+import { setFilters, resetFilters, setPage, setProperties } from '../../store/slices/propertySlice';
 import PropertyCard from '../../components/properties/PropertyCard';
 import PropertyCardSkeleton from '../../components/properties/PropertyCardSkeleton';
 import { CITIES, PROPERTY_TYPES } from '../../data/mockData';
 import { useLanguage } from '../../contexts/LanguageContext';
+import api from '../../services/api';
+import { mapBackendPropertyToFrontend } from '../../utils/propertyMapper';
 
 export default function PropertiesPage() {
   const dispatch = useAppDispatch();
@@ -24,6 +26,24 @@ export default function PropertiesPage() {
     { value: 'most-viewed', label: lang === 'ar' ? 'الأكثر مشاهدة' : 'Most Viewed' },
   ];
 
+  // Fetch properties on mount
+  useEffect(() => {
+    const fetchAllProperties = async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.get('/properties');
+        const rawList = res.data.data?.properties || res.data.data || [];
+        const mapped = rawList.map(mapBackendPropertyToFrontend);
+        dispatch(setProperties(mapped));
+      } catch (err) {
+        console.error('Failed to fetch properties', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAllProperties();
+  }, [dispatch]);
+
   // Apply URL params on mount
   useEffect(() => {
     const q = searchParams.get('q') || '';
@@ -31,13 +51,6 @@ export default function PropertiesPage() {
     const city = searchParams.get('city') || 'all';
     dispatch(setFilters({ searchQuery: q, listingType: type, city }));
   }, []);
-
-  // Simulate loading
-  useEffect(() => {
-    setIsLoading(true);
-    const t = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(t);
-  }, [filters]);
 
   const filtered = useMemo(() => {
     let result = [...properties];

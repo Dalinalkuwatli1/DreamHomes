@@ -50,9 +50,9 @@ export default function PropertyFormPage() {
     defaultValues: {
       title: existing?.title || '',
       description: existing?.description || '',
-      type: existing?.type || '',
-      listingType: existing?.listingType || 'sale',
-      price: existing?.price || undefined,
+      type: (existing as any)?.propertyType || existing?.type || '',
+      listingType: existing?.listingType || (existing?.type?.toLowerCase() === 'rent' ? 'rent' : 'sale'),
+      price: existing?.price ? Number(existing.price) : undefined,
       area: existing?.area || undefined,
       bedrooms: existing?.bedrooms ?? 2,
       bathrooms: existing?.bathrooms ?? 1,
@@ -95,7 +95,8 @@ export default function PropertyFormPage() {
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('description', data.description);
-      formData.append('type', data.type.toUpperCase()); // SALE / RENT
+      formData.append('type', data.listingType.toUpperCase()); // SALE / RENT
+      formData.append('propertyType', data.type); // e.g. Apartment, Villa
       formData.append('price', String(data.price));
       formData.append('area', String(data.area));
       formData.append('bedrooms', String(data.bedrooms));

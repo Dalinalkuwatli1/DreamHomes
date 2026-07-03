@@ -47,7 +47,7 @@ export default function Navbar() {
     dispatch(logout());
     setUserMenuOpen(false);
     dispatch(closeMobileMenu());
-    navigate('/');
+    window.location.href = '/login';
   };
 
   const handleRoleSwitch = async (role: 'user' | 'owner') => {

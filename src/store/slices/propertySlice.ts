@@ -37,6 +37,9 @@ const propertySlice = createSlice({
   name: 'properties',
   initialState,
   reducers: {
+    setProperties(state, action: PayloadAction<Property[]>) {
+      state.properties = action.payload;
+    },
     setFilters(state, action: PayloadAction<Partial<PropertyFilters>>) {
       state.filters = { ...state.filters, ...action.payload };
       state.currentPage = 1;
@@ -68,7 +71,7 @@ const propertySlice = createSlice({
 });
 
 export const {
-  setFilters, resetFilters, setPage, setSelectedProperty,
+  setProperties, setFilters, resetFilters, setPage, setSelectedProperty,
   addProperty, updateProperty, deleteProperty, setLoading,
 } = propertySlice.actions;
 

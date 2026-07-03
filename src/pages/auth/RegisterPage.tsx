@@ -52,7 +52,7 @@ export default function RegisterPage() {
         message: lang === 'ar' ? `مرحباً بك في DreamHomes، ${user.name}! 🎉` : `Welcome to DreamHomes, ${user.name.split(' ')[0]}!`, 
         type: 'success' 
       }));
-      navigate(user.role === 'OWNER' ? '/dashboard' : '/');
+      navigate(user.role?.toUpperCase() === 'OWNER' ? '/dashboard' : '/');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || (lang === 'ar' ? 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.' : 'Registration failed. Please try again.');
       dispatch(addToast({ message: errorMsg, type: 'error' }));
