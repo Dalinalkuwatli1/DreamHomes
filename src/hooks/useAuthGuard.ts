@@ -1,25 +1,37 @@
-import { useState } from 'react';
-import { useAppSelector } from '../hooks/useAppStore';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from './useAppStore';
+import { addToast } from '../store/slices/uiSlice';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export type ProtectedAction = 'favorite' | 'message' | 'addProperty' | 'dashboard' | 'schedule' | 'review' | 'general';
 
 export function useAuthGuard() {
   const user = useAppSelector(s => s.auth.user);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalAction, setModalAction] = useState<ProtectedAction>('general');
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { lang } = useLanguage();
 
   /**
    * Returns true if user is authenticated and can proceed.
-   * Returns false and opens auth modal if guest.
+   * Otherwise, shows a toast warning and redirects to /login.
    */
   const requireAuth = (action: ProtectedAction = 'general'): boolean => {
     if (user) return true;
-    setModalAction(action);
-    setModalOpen(true);
+
+    dispatch(addToast({
+      message: lang === 'ar' ? 'يجب تسجيل الدخول أو إنشاء حساب أولاً.' : 'Please sign in or register first.',
+      type: 'warning'
+    }));
+
+    navigate('/login', { state: { showLoginMessage: true } });
     return false;
   };
 
-  const closeModal = () => setModalOpen(false);
-
-  return { requireAuth, modalOpen, modalAction, closeModal, isAuthenticated: !!user };
+  return {
+    requireAuth,
+    modalOpen: false,
+    modalAction: 'general' as ProtectedAction,
+    closeModal: () => {},
+    isAuthenticated: !!user
+  };
 }

@@ -68,7 +68,7 @@ export default function PropertyDetailPage() {
       propertyTitle: property.title,
       senderId: user.id,
       senderName: user.name,
-      senderAvatar: user.avatar,
+      senderAvatar: user.avatar || '',
       receiverId: property.ownerId,
       receiverName: property.ownerName,
       messages: [],

@@ -64,6 +64,22 @@ const propertySlice = createSlice({
     deleteProperty(state, action: PayloadAction<string>) {
       state.properties = state.properties.filter(p => p.id !== action.payload);
     },
+    updateOwnerDetails(state, action: PayloadAction<{ ownerId: string; name?: string; avatar?: string; phone?: string; email?: string }>) {
+      state.properties.forEach(p => {
+        if (p.ownerId === action.payload.ownerId) {
+          if (action.payload.name !== undefined) p.ownerName = action.payload.name;
+          if (action.payload.avatar !== undefined) p.ownerAvatar = action.payload.avatar;
+          if (action.payload.phone !== undefined) p.ownerPhone = action.payload.phone;
+          if (action.payload.email !== undefined) p.ownerEmail = action.payload.email;
+        }
+      });
+      if (state.selectedProperty && state.selectedProperty.ownerId === action.payload.ownerId) {
+        if (action.payload.name !== undefined) state.selectedProperty.ownerName = action.payload.name;
+        if (action.payload.avatar !== undefined) state.selectedProperty.ownerAvatar = action.payload.avatar;
+        if (action.payload.phone !== undefined) state.selectedProperty.ownerPhone = action.payload.phone;
+        if (action.payload.email !== undefined) state.selectedProperty.ownerEmail = action.payload.email;
+      }
+    },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
     },
@@ -72,7 +88,7 @@ const propertySlice = createSlice({
 
 export const {
   setProperties, setFilters, resetFilters, setPage, setSelectedProperty,
-  addProperty, updateProperty, deleteProperty, setLoading,
+  addProperty, updateProperty, deleteProperty, updateOwnerDetails, setLoading,
 } = propertySlice.actions;
 
 export default propertySlice.reducer;

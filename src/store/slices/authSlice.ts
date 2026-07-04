@@ -12,8 +12,18 @@ interface AuthState {
 const storedUser = localStorage.getItem('authUser');
 const storedToken = localStorage.getItem('accessToken');
 
+const parseStoredUser = (): User | null => {
+  if (!storedUser) return null;
+  try {
+    const u = JSON.parse(storedUser);
+    return { ...u, favoriteIds: Array.isArray(u.favoriteIds) ? u.favoriteIds : [] };
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
+  user: parseStoredUser(),
   isAuthenticated: !!storedUser && !!storedToken,
   loading: false,
 };
@@ -40,11 +50,21 @@ const authSlice = createSlice({
         localStorage.setItem('authUser', JSON.stringify(state.user));
       }
     },
+    toggleFavorite(state, action: PayloadAction<string>) {
+      if (state.user) {
+        const ids = state.user.favoriteIds ?? [];
+        const exists = ids.includes(action.payload);
+        state.user.favoriteIds = exists
+          ? ids.filter(id => id !== action.payload)
+          : [...ids, action.payload];
+        localStorage.setItem('authUser', JSON.stringify(state.user));
+      }
+    },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
     },
   },
 });
 
-export const { login, logout, updateUser, setLoading } = authSlice.actions;
+export const { login, logout, updateUser, setLoading, toggleFavorite } = authSlice.actions;
 export default authSlice.reducer;

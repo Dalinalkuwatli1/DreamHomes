@@ -50,25 +50,9 @@ export default function Navbar() {
     window.location.href = '/login';
   };
 
-  const handleRoleSwitch = async (role: 'user' | 'owner') => {
-    try {
-      const response = await api.patch('/users/me', { role: role.toUpperCase() });
-      const updatedUser = response.data.data;
-      dispatch(updateUser(updatedUser));
-      setUserMenuOpen(false);
-      dispatch(closeMobileMenu());
-      if (role === 'owner') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      console.error('Failed to switch role', err);
-    }
-  };
-
-  // Role badge color
-  const roleBadge = user?.role === 'owner'
+  // Role badge color — compare case-insensitively (backend returns OWNER/USER uppercase)
+  const isOwner = user?.role?.toUpperCase() === 'OWNER' || user?.role?.toUpperCase() === 'ADMIN';
+  const roleBadge = isOwner
     ? { bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9', label: lang === 'ar' ? 'مالك عقار' : 'Property Owner' }
     : { bg: 'rgba(99,102,241,0.15)', color: '#818cf8', label: lang === 'ar' ? 'مستخدم عادي' : 'Regular User' };
 
@@ -193,7 +177,7 @@ export default function Navbar() {
                             className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full"
                             style={{ background: roleBadge.bg, color: roleBadge.color }}
                           >
-                            {user.role === 'owner' ? <Building2 size={10} /> : <User size={10} />}
+                            {isOwner ? <Building2 size={10} /> : <User size={10} />}
                             {roleBadge.label}
                           </span>
                         </div>
@@ -208,14 +192,16 @@ export default function Navbar() {
                             <User size={15} className="text-sky-400 shrink-0" />
                             {t('nav.profile')}
                           </Link>
-                          <Link
-                            to="/properties"
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-custom hover:bg-bg transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <Home size={15} className="text-emerald-400 shrink-0" />
-                            {lang === 'ar' ? 'عقاراتي' : 'My Properties'}
-                          </Link>
+                          {isOwner && (
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-custom hover:bg-bg transition-colors"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              <Home size={15} className="text-emerald-400 shrink-0" />
+                              {lang === 'ar' ? 'عقاراتي' : 'My Properties'}
+                            </Link>
+                          )}
                           <Link
                             to="/favorites"
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-custom hover:bg-bg transition-colors"
@@ -239,7 +225,7 @@ export default function Navbar() {
                             )}
                           </Link>
                           {/* Dashboard: only for owners */}
-                          {user.role === 'owner' && (
+                          {isOwner && (
                             <Link
                               to="/dashboard"
                               className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-custom hover:bg-bg transition-colors"
@@ -257,37 +243,6 @@ export default function Navbar() {
                             <Settings size={15} className="text-amber-400 shrink-0" />
                             {lang === 'ar' ? 'الإعدادات' : 'Settings'}
                           </Link>
-                        </div>
-
-                        {/* Role switch */}
-                        <div className="border-t border-custom pt-1">
-                          <p className="px-4 py-1.5 text-[11px] text-muted font-semibold uppercase tracking-wider">
-                            {lang === 'ar' ? 'تبديل الحساب' : 'Switch Account'}
-                          </p>
-                          <button
-                            onClick={() => handleRoleSwitch('user')}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                              user.role === 'user'
-                                ? 'text-indigo-500 bg-indigo-500/5'
-                                : 'text-muted hover:text-custom hover:bg-bg'
-                            }`}
-                          >
-                            <User size={14} className="shrink-0" />
-                            <span className="flex-1 text-start">{lang === 'ar' ? 'مستخدم عادي' : 'Regular User'}</span>
-                            {user.role === 'user' && <Check size={14} className="text-indigo-500" />}
-                          </button>
-                          <button
-                            onClick={() => handleRoleSwitch('owner')}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                              user.role === 'owner'
-                                ? 'text-sky-500 bg-sky-500/5'
-                                : 'text-muted hover:text-custom hover:bg-bg'
-                            }`}
-                          >
-                            <Building2 size={14} className="shrink-0" />
-                            <span className="flex-1 text-start">{lang === 'ar' ? 'مالك عقار' : 'Property Owner'}</span>
-                            {user.role === 'owner' && <Check size={14} className="text-sky-500" />}
-                          </button>
                         </div>
 
                         {/* Sign out */}
@@ -369,7 +324,7 @@ export default function Navbar() {
                     <MessageSquare size={16} /> {lang === 'ar' ? 'الرسائل' : 'Messages'}
                     {unreadCount > 0 && <span className="ms-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-500">{unreadCount}</span>}
                   </NavLink>
-                  {user.role === 'owner' && (
+                  {isOwner && (
                     <NavLink to="/dashboard" onClick={() => dispatch(closeMobileMenu())} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isActive ? 'bg-sky-500/10 text-sky-500' : 'text-muted hover:text-custom hover:bg-bg'}`}>
                       <LayoutDashboard size={16} /> {t('nav.dashboard')}
                     </NavLink>

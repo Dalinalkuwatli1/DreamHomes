@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,27 +19,52 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, isRtl, lang } = useLanguage();
   const [showPw, setShowPw] = useState(false);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    if (location.state?.showLoginMessage) {
+      dispatch(addToast({
+        message: lang === 'ar' ? 'يجب تسجيل الدخول أو إنشاء حساب أولاً.' : 'Please sign in or register first.',
+        type: 'warning'
+      }));
+      // clear the state so it doesn't pop up on every page render/refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, lang, dispatch, navigate, location.pathname]);
 
   const onSubmit = async (data: FormData) => {
     try {
       const response = await api.post('/auth/login', data);
-      const { user, accessToken } = response.data.data;
-      
+      const { user: rawUser, accessToken } = response.data.data;
+      // Normalize user so favoriteIds always exists
+      const user = { ...rawUser, favoriteIds: rawUser.favoriteIds ?? [] };
       dispatch(login({ user, accessToken }));
       dispatch(addToast({ 
         message: lang === 'ar' ? `مرحباً بعودتك، ${user.name}! 👋` : `Welcome back, ${user.name.split(' ')[0]}!`, 
         type: 'success' 
       }));
-      navigate('/');
+      // Redirect owner or admin to dashboard, regular user to home
+      const userRole = user.role?.toUpperCase();
+      navigate(userRole === 'OWNER' || userRole === 'ADMIN' ? '/dashboard' : '/');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || (lang === 'ar' ? 'فشل تسجيل الدخول. يرجى التحقق من البيانات.' : 'Login failed. Please check your credentials.');
       dispatch(addToast({ message: errorMsg, type: 'error' }));
     }
+  };
+
+  const handleDemoLogin = (role: 'owner' | 'user') => {
+    const email = role === 'owner' ? 'owner@example.com' : 'user@example.com';
+    setValue('email', email);
+    setValue('password', 'password123');
+    // Trigger submission
+    setTimeout(() => {
+      handleSubmit(onSubmit)();
+    }, 50);
   };
 
   return (
@@ -55,11 +80,6 @@ export default function LoginPage() {
         </div>
 
         <div className="dh-card p-8">
-          {/* Demo hint */}
-          <div className="p-3 rounded-xl mb-5 text-xs font-semibold" style={{ background: 'rgba(14,165,233,0.08)' }}>
-            <p className="text-sky-600 dark:text-sky-400">{t('auth.demoHint')}</p>
-          </div>
-
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div>
               <label className="dh-label flex items-center gap-1.5"><Mail size={12} /> {t('auth.email')}</label>
@@ -86,6 +106,29 @@ export default function LoginPage() {
               {isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
             </button>
           </form>
+
+          {/* Quick Demo Login */}
+          <div className="mt-6 pt-5 border-t border-custom">
+            <p className="text-center text-xs text-muted mb-3 font-semibold">
+              {lang === 'ar' ? 'تسجيل دخول سريع للتجربة (Demo)' : 'Quick Demo Access'}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('owner')}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-sky-500/30 bg-sky-500/5 text-sky-500 hover:bg-sky-500/10 text-xs font-bold transition-all"
+              >
+                🏢 {lang === 'ar' ? 'دخول كمالك عقار' : 'Login as Owner'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('user')}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-indigo-500/30 bg-indigo-500/5 text-indigo-500 hover:bg-indigo-500/10 text-xs font-bold transition-all"
+              >
+                👤 {lang === 'ar' ? 'دخول كمستخدم عادي' : 'Login as User'}
+              </button>
+            </div>
+          </div>
 
           <p className="text-center text-xs sm:text-sm text-muted mt-6">
             {t('auth.dontHaveAccount')}{' '}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,9 @@ import { addProperty, updateProperty } from '../../store/slices/propertySlice';
 import { addToast } from '../../store/slices/uiSlice';
 import { CITIES, PROPERTY_TYPES, FEATURES } from '../../data/mockData';
 import { useLanguage, cityTranslations, typeTranslations, featureTranslations } from '../../contexts/LanguageContext';
-import type { Property } from '../../types';
+import api from '../../services/api';
+import { mapBackendPropertyToFrontend } from '../../utils/propertyMapper';
+
 
 const schema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
@@ -43,6 +45,8 @@ export default function PropertyFormPage() {
       : ''
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload');
+  const [urlInput, setUrlInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<PropertyFormData>({
@@ -109,21 +113,24 @@ export default function PropertyFormPage() {
       }
 
       if (imageFile) {
-        // Appends under key "images" as defined in uploadPropertyImages upload middleware
+        // File upload — goes through Cloudinary via uploadPropertyImages middleware
         formData.append('images', imageFile);
+      } else if (imageMode === 'url' && imagePreview) {
+        // URL mode — send as plain string so backend can store it directly
+        formData.append('imageUrl', imagePreview);
       }
 
       if (isEdit && existing) {
         const res = await api.put(`/properties/${existing.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        dispatch(updateProperty(res.data.data));
+        dispatch(updateProperty(mapBackendPropertyToFrontend(res.data.data)));
         dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث العقار بنجاح!' : 'Property updated successfully!', type: 'success' }));
       } else {
         const res = await api.post('/properties', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        dispatch(addProperty(res.data.data));
+        dispatch(addProperty(mapBackendPropertyToFrontend(res.data.data)));
         dispatch(addToast({ message: lang === 'ar' ? 'تم إدراج العقار بنجاح!' : 'Property listed successfully!', type: 'success' }));
       }
       navigate('/dashboard');
@@ -268,11 +275,16 @@ export default function PropertyFormPage() {
           </div>
         </div>
 
-        {/* Image Upload */}
+        {/* ── Image Upload ─────────────────────────────────────── */}
         <div className="dh-card p-6">
-          <h3 className="font-bold text-custom mb-4">{lang === 'ar' ? 'صورة العقار' : 'Property Image'}</h3>
+          <h3 className="font-bold text-custom mb-1">
+            {lang === 'ar' ? 'صورة العقار' : 'Property Image'}
+          </h3>
+          <p className="text-xs text-muted mb-4">
+            {lang === 'ar' ? 'ارفع صورة من جهازك أو أدخل رابطاً مباشراً' : 'Upload from your device or paste a direct image URL'}
+          </p>
 
-          {/* Hidden file input */}
+          {/* Hidden file input — triggered by the visible button */}
           <input
             ref={fileInputRef}
             type="file"
@@ -285,51 +297,199 @@ export default function PropertyFormPage() {
             }}
           />
 
-          {imagePreview ? (
-            /* Preview with overlay controls */
-            <div className="relative h-56 rounded-2xl overflow-hidden group">
-              <img src={imagePreview} alt="Property preview" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+          {/* Tabs */}
+          <div className="flex gap-2 mb-5">
+            <button
+              type="button"
+              onClick={() => setImageMode('upload')}
+              style={{
+                padding: '8px 20px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: '2px solid',
+                cursor: 'pointer',
+                transition: 'all .2s',
+                background: imageMode === 'upload' ? '#0ea5e9' : 'transparent',
+                borderColor: imageMode === 'upload' ? '#0ea5e9' : 'rgba(14,165,233,0.3)',
+                color: imageMode === 'upload' ? '#fff' : '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Upload size={14} />
+              {lang === 'ar' ? 'رفع ملف' : 'Upload File'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageMode('url')}
+              style={{
+                padding: '8px 20px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: '2px solid',
+                cursor: 'pointer',
+                transition: 'all .2s',
+                background: imageMode === 'url' ? '#0ea5e9' : 'transparent',
+                borderColor: imageMode === 'url' ? '#0ea5e9' : 'rgba(14,165,233,0.3)',
+                color: imageMode === 'url' ? '#fff' : '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <ImagePlus size={14} />
+              {lang === 'ar' ? 'رابط صورة' : 'Image URL'}
+            </button>
+          </div>
+
+          {/* ── Upload Mode ── */}
+          {imageMode === 'upload' && (
+            imagePreview && imageFile ? (
+              /* Preview */
+              <div className="relative h-56 rounded-2xl overflow-hidden group">
+                <img src={imagePreview} alt="Property preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-800 rounded-xl text-sm font-semibold hover:bg-gray-100 transition"
+                  >
+                    <Upload size={15} />
+                    {lang === 'ar' ? 'تغيير' : 'Change'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setImagePreview(''); setImageFile(null); setValue('imageUrl', ''); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition"
+                  >
+                    <X size={15} />
+                    {lang === 'ar' ? 'إزالة' : 'Remove'}
+                  </button>
+                </div>
+                <span className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-lg">
+                  ✓ {lang === 'ar' ? 'جاهزة للرفع' : 'Ready to upload'}
+                </span>
+              </div>
+            ) : (
+              /* Drop Zone + Upload Button */
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                style={{
+                  border: '2px dashed #38bdf8',
+                  borderRadius: '16px',
+                  background: 'rgba(14,165,233,0.04)',
+                  padding: '40px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '16px',
+                }}
+              >
+                <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(14,165,233,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ImagePlus size={30} color="#0ea5e9" />
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+                    {lang === 'ar' ? 'اسحب الصورة هنا أو اضغط الزر أدناه' : 'Drag & drop an image here, or click the button below'}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#94a3b8' }}>
+                    PNG, JPG, WEBP — {lang === 'ar' ? 'حتى 10 ميغابايت' : 'up to 10 MB'}
+                  </p>
+                </div>
+                {/* THE PRIMARY UPLOAD BUTTON — always visible */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/90 text-gray-800 rounded-xl text-sm font-semibold hover:bg-white transition"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 28px',
+                    background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(14,165,233,0.35)',
+                    transition: 'opacity .2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                 >
-                  <Upload size={15} />
-                  {lang === 'ar' ? 'تغيير الصورة' : 'Change Image'}
+                  <Upload size={16} />
+                  {lang === 'ar' ? 'اختر صورة من جهازك' : 'Browse Files'}
                 </button>
+              </div>
+            )
+          )}
+
+          {/* ── URL Mode ── */}
+          {imageMode === 'url' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={e => setUrlInput(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="dh-input text-sm flex-1"
+                />
                 <button
                   type="button"
-                  onClick={() => { setImagePreview(''); setValue('imageUrl', ''); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500/90 text-white rounded-xl text-sm font-semibold hover:bg-red-500 transition"
+                  disabled={!urlInput.trim()}
+                  onClick={() => {
+                    if (!urlInput.trim()) return;
+                    setImagePreview(urlInput.trim());
+                    setValue('imageUrl', urlInput.trim());
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    background: urlInput.trim() ? '#0ea5e9' : '#94a3b8',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: urlInput.trim() ? 'pointer' : 'not-allowed',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
                 >
-                  <X size={15} />
-                  {lang === 'ar' ? 'إزالة' : 'Remove'}
+                  {lang === 'ar' ? 'معاينة' : 'Preview'}
                 </button>
               </div>
-              <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-lg">
-                {lang === 'ar' ? '✓ صورة محفوظة' : '✓ Image saved'}
-              </div>
-            </div>
-          ) : (
-            /* Drop zone */
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3 h-48 rounded-2xl border-2 border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/50 dark:bg-sky-900/10 hover:bg-sky-100/60 dark:hover:bg-sky-900/20 cursor-pointer transition-colors"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
-                <ImagePlus size={28} className="text-sky-500" />
-              </div>
-              <div className="text-center px-4">
-                <p className="font-semibold text-custom text-sm">
-                  {lang === 'ar' ? 'اضغط لاختيار صورة أو اسحبها هنا' : 'Click to upload or drag & drop'}
-                </p>
-                <p className="text-xs text-muted mt-1">
-                  {lang === 'ar' ? 'PNG، JPG، WEBP — حتى 10 ميغابايت' : 'PNG, JPG, WEBP — up to 10 MB'}
-                </p>
-              </div>
+              {imagePreview && !imageFile && (
+                <div className="relative h-52 rounded-2xl overflow-hidden group">
+                  <img
+                    src={imagePreview}
+                    alt="URL preview"
+                    className="w-full h-full object-cover"
+                    onError={() => {
+                      setImagePreview('');
+                      setUrlInput('');
+                      dispatch(addToast({ message: lang === 'ar' ? 'رابط الصورة غير صالح' : 'Invalid image URL', type: 'error' }));
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => { setImagePreview(''); setUrlInput(''); setValue('imageUrl', ''); }}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-semibold"
+                    >
+                      <X size={15} /> {lang === 'ar' ? 'إزالة' : 'Remove'}
+                    </button>
+                  </div>
+                  <span className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-lg">
+                    ✓ {lang === 'ar' ? 'رابط صالح' : 'Valid URL'}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>

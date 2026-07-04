@@ -9,6 +9,7 @@ import { addToast } from '../../store/slices/uiSlice';
 import { format } from 'date-fns';
 import { useLanguage } from '../../contexts/LanguageContext';
 import api from '../../services/api';
+import { updateOwnerDetails } from '../../store/slices/propertySlice';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -77,7 +78,14 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       const res = await api.patch('/users/me', data);
-      dispatch(updateUser(res.data.data));
+      const updatedUser = res.data.data;
+      dispatch(updateUser(updatedUser));
+      dispatch(updateOwnerDetails({
+        ownerId: String(updatedUser.id),
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        email: updatedUser.email,
+      }));
       dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث الملف الشخصي بنجاح!' : 'Profile updated successfully!', type: 'success' }));
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to update profile';
@@ -116,7 +124,12 @@ export default function ProfilePage() {
       const res = await api.patch('/users/me/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      dispatch(updateUser({ avatar: res.data.data.avatar }));
+      const newAvatarUrl = res.data.data.avatar;
+      dispatch(updateUser({ avatar: newAvatarUrl }));
+      dispatch(updateOwnerDetails({
+        ownerId: String(user.id),
+        avatar: newAvatarUrl,
+      }));
       dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث الصورة الشخصية بنجاح!' : 'Avatar updated successfully!', type: 'success' }));
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to upload avatar';
@@ -210,7 +223,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="dh-label flex items-center gap-1.5"><Mail size={12} /> {t('profile.email')}</label>
-              <input {...regProfile('email')} className="dh-input text-sm" placeholder="your@email.com" disabled />
+              <input {...regProfile('email')} className="dh-input text-sm" placeholder="your@email.com" />
               {profileErrors.email && <p className="text-xs text-red-500 mt-1">{profileErrors.email.message}</p>}
             </div>
             <div>

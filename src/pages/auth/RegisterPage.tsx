@@ -46,7 +46,9 @@ export default function RegisterPage() {
         password: data.password,
       });
 
-      const { user, accessToken } = response.data.data;
+      const { user: rawUser, accessToken } = response.data.data;
+      // Normalize user so favoriteIds always exists
+      const user = { ...rawUser, favoriteIds: rawUser.favoriteIds ?? [] };
       dispatch(login({ user, accessToken }));
       dispatch(addToast({ 
         message: lang === 'ar' ? `مرحباً بك في DreamHomes، ${user.name}! 🎉` : `Welcome to DreamHomes, ${user.name.split(' ')[0]}!`, 

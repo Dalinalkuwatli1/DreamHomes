@@ -76,15 +76,16 @@ export default function AppRouter() {
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes — any authenticated user */}
           <Route element={<ProtectedRoute />}>
-            {/* User */}
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="settings" element={<SettingsPage />} />
+          </Route>
 
-            {/* Dashboard */}
+          {/* Owner-only Routes — role must be OWNER */}
+          <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="dashboard/add-property" element={<PropertyFormPage />} />
             <Route path="dashboard/edit-property/:id" element={<PropertyFormPage />} />

@@ -24,7 +24,7 @@ export function mapBackendPropertyToFrontend(p: any): Property {
     ownerAvatar: p.owner?.avatar || '',
     ownerPhone: p.owner?.phone || '',
     ownerEmail: p.owner?.email || '',
-    status: p.status?.toLowerCase() === 'active' ? 'active' : (p.status?.toLowerCase() === 'sold' ? 'sold' : (p.status?.toLowerCase() === 'rented' ? 'rented' : 'draft')),
+    status: (() => { const s = p.status?.toUpperCase(); return s === 'ACTIVE' ? 'active' : s === 'PENDING' ? 'pending' : s === 'SOLD' ? 'sold' : s === 'RENTED' ? 'rented' : 'draft'; })(),
     isNew: true,
     isFeatured: false,
     createdAt: p.createdAt,

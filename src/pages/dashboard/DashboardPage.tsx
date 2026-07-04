@@ -40,10 +40,10 @@ export default function DashboardPage() {
 
   const stats = [
     { label: t('dash.totalListings'), value: myProperties.length, icon: <Building2 size={22} className="text-sky-400" />, color: 'sky' },
-    { label: t('dash.activeListings'), value: myProperties.filter(p => p.status === 'active').length, icon: <TrendingUp size={22} className="text-green-400" />, color: 'green' },
+    { label: t('dash.activeListings'), value: myProperties.filter(p => p.status === 'active' || p.status === 'pending').length, icon: <TrendingUp size={22} className="text-green-400" />, color: 'green' },
     { label: t('dash.forSale'), value: myProperties.filter(p => p.listingType === 'sale').length, icon: <DollarSign size={22} className="text-purple-400" />, color: 'purple' },
     { label: t('dash.forRent'), value: myProperties.filter(p => p.listingType === 'rent').length, icon: <Home size={22} className="text-orange-400" />, color: 'orange' },
-    { label: t('dash.saved'), value: user?.favoriteIds.length || 0, icon: <Heart size={22} className="text-red-400" />, color: 'red' },
+    { label: t('dash.saved'), value: user?.favoriteIds?.length ?? 0, icon: <Heart size={22} className="text-red-400" />, color: 'red' },
     { label: t('dash.messages'), value: conversations.length, icon: <MessageSquare size={22} className="text-indigo-400" />, color: 'indigo' },
   ];
 
@@ -139,8 +139,18 @@ export default function DashboardPage() {
                       <span className="text-sm font-semibold text-sky-500">{formatPrice(p.price, p.listingType)}</span>
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">
-                      <span className={`dh-badge ${p.status === 'active' ? 'dh-dh-badge-new' : 'dh-dh-badge-sold'}`}>
-                        {p.status === 'active' ? (lang === 'ar' ? 'نشط' : 'active') : (lang === 'ar' ? 'مباع' : 'sold')}
+                      <span className={`dh-badge ${
+                        p.status === 'active' ? 'dh-badge-sale' :
+                        p.status === 'pending' ? 'dh-badge-new' :
+                        'dh-badge-rent'
+                      }`}>
+                        {p.status === 'active'
+                          ? (lang === 'ar' ? 'نشط' : 'Active')
+                          : p.status === 'pending'
+                            ? (lang === 'ar' ? 'قيد المراجعة' : 'Pending')
+                            : p.status === 'sold'
+                              ? (lang === 'ar' ? 'مباع' : 'Sold')
+                              : (lang === 'ar' ? 'مؤجّر' : 'Rented')}
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden lg:table-cell">

@@ -17,7 +17,7 @@ export interface Property {
   ownerAvatar: string;
   ownerPhone: string;
   ownerEmail: string;
-  status: 'active' | 'sold' | 'rented' | 'draft';
+  status: 'active' | 'pending' | 'sold' | 'rented' | 'draft';
   isNew: boolean;
   isFeatured: boolean;
   createdAt: string;
@@ -28,12 +28,12 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  avatar: string;
-  bio: string;
-  role: 'user' | 'owner' | 'admin';
+  phone?: string;
+  avatar?: string;
+  bio?: string;
+  role: 'user' | 'owner' | 'admin' | 'USER' | 'OWNER' | 'ADMIN';
   favoriteIds: string[];
-  joinedAt: string;
+  joinedAt?: string;
 }
 
 export interface Message {
