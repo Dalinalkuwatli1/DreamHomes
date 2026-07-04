@@ -127,7 +127,7 @@ export default function ProfilePage() {
       const newAvatarUrl = res.data.data.avatar;
       dispatch(updateUser({ avatar: newAvatarUrl }));
       dispatch(updateOwnerDetails({
-        ownerId: String(user.id),
+        ownerId: String(user?.id),
         avatar: newAvatarUrl,
       }));
       dispatch(addToast({ message: lang === 'ar' ? 'تم تحديث الصورة الشخصية بنجاح!' : 'Avatar updated successfully!', type: 'success' }));
